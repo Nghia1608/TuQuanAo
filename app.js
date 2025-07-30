@@ -8,7 +8,7 @@ const path = require('path');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 // middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -33,6 +33,7 @@ const mainRoutes = require('./routes/main');
 app.use('/', mainRoutes);
 
 // run server
-app.listen(PORT, () => {
-  console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
+  
 });
