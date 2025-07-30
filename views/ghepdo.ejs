@@ -1,49 +1,199 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>👕 Ghép Đồ</title>
-  <link rel="stylesheet" href="/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>👕 Ghép Đồ 👖</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      text-align: center;
+      background: #fdfdfd;
+      color: #333;
+    }
+
+    h2 {
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"] {
+      padding: 0.75rem;
+      width: 90%;
+      max-width: 400px;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .search-results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .search-img {
+      width: 90px;
+      height: auto;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      border: 2px solid transparent;
+    }
+
+    .search-img:hover {
+      transform: scale(1.07);
+      border-color: #4CAF50;
+    }
+
+    .combo-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-top: 2rem;
+    }
+
+    .preview-block {
+      position: relative;
+    }
+
+    .preview-block img {
+      width: 200px;
+      margin: 0;
+      padding: 0;
+      display: block;
+      border-radius: 0;
+      box-shadow: none;
+      transition: transform 0.3s ease;
+    }
+
+    .rotate-btn {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 600px) {
+      .rotate-btn {
+        right: -30px;
+        font-size: 0.75rem;
+      }
+
+      .preview-block img {
+        width: 80%;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>👚 Ghép đồ thần sầu nè!</h1>
+  <h2>🧥 Ghép Đồ 👖</h2>
 
-    <form method="GET" action="/ghepdo">
-      <input type="text" name="q" placeholder="🔍 Tìm món đồ..." value="<%= typeof query !== 'undefined' ? query : '' %>" />
-      <button type="submit">Tìm</button>
-    </form>
-
-    <form method="POST" action="/ghepdo">
-      <div class="ghep-frame">
-        <div class="half-frame">
-          <h3>Khung trên</h3>
-          <select name="topId" required>
-            <% images.forEach(img => { %>
-              <option value="<%= img._id %>"><%= img.name %></option>
-            <% }); %>
-          </select>
-        </div>
-
-        <div class="half-frame">
-          <h3>Khung dưới</h3>
-          <select name="bottomId" required>
-            <% images.forEach(img => { %>
-              <option value="<%= img._id %>"><%= img.name %></option>
-            <% }); %>
-          </select>
-        </div>
-      </div>
-      <button type="submit">✅ Ghép liền!</button>
-    </form>
-
-    <% if (combo) { %>
-      <h2>Kết quả combo:</h2>
-      <div class="ghep-frame">
-        <img src="<%= combo.top.url %>" alt="Áo" style="max-height: 200px;">
-        <img src="<%= combo.bottom.url %>" alt="Quần" style="max-height: 200px;">
-      </div>
-    <% } %>
+  <!-- Ô tìm áo -->
+  <div>
+    <input type="text" id="topSearch" placeholder="🔍 Tìm áo..." />
+    <div id="topResults" class="search-results"></div>
   </div>
+
+  <!-- Ô tìm quần -->
+  <div>
+    <input type="text" id="bottomSearch" placeholder="🔍 Tìm quần..." />
+    <div id="bottomResults" class="search-results"></div>
+  </div>
+
+  <!-- Hiển thị combo đã chọn -->
+  <div class="combo-preview">
+    <div class="preview-block">
+      <img id="topPreview" src="" alt="Áo" style="display: none;" />
+      <button id="rotateTopBtn" class="rotate-btn" style="display: none;">🔄 Xoay</button>
+    </div>
+    <div class="preview-block">
+      <img id="bottomPreview" src="" alt="Quần" style="display: none;" />
+      <button id="rotateBottomBtn" class="rotate-btn" style="display: none;">🔄 Xoay</button>
+    </div>
+  </div>
+
+  <!-- JS logic -->
+  <script>
+    const topImages = <%- JSON.stringify(topImages) %>;
+    const bottomImages = <%- JSON.stringify(bottomImages) %>;
+
+    const topSearch = document.getElementById("topSearch");
+    const bottomSearch = document.getElementById("bottomSearch");
+    const topResults = document.getElementById("topResults");
+    const bottomResults = document.getElementById("bottomResults");
+    const topPreview = document.getElementById("topPreview");
+    const bottomPreview = document.getElementById("bottomPreview");
+    const rotateTopBtn = document.getElementById("rotateTopBtn");
+    const rotateBottomBtn = document.getElementById("rotateBottomBtn");
+
+    let topRotation = 0;
+    let bottomRotation = 0;
+
+    function searchImages(images, keyword) {
+      return images.filter(img =>
+        img.name.toLowerCase().includes(keyword.toLowerCase())
+      );
+    }
+
+    function renderResults(container, images, isTop) {
+      container.innerHTML = "";
+      images.forEach(img => {
+        const imgEl = document.createElement("img");
+        imgEl.src = img.url;
+        imgEl.alt = img.name;
+        imgEl.className = "search-img";
+        imgEl.onclick = () => {
+          if (isTop) {
+            topPreview.src = img.url;
+            topPreview.style.display = "block";
+            rotateTopBtn.style.display = "inline-block";
+            topRotation = 0;
+            topPreview.style.transform = `rotate(0deg)`;
+          } else {
+            bottomPreview.src = img.url;
+            bottomPreview.style.display = "block";
+            rotateBottomBtn.style.display = "inline-block";
+            bottomRotation = 0;
+            bottomPreview.style.transform = `rotate(0deg)`;
+          }
+        };
+        container.appendChild(imgEl);
+      });
+    }
+
+    topSearch.addEventListener("input", () => {
+      const results = searchImages(topImages, topSearch.value);
+      renderResults(topResults, results, true);
+    });
+
+    bottomSearch.addEventListener("input", () => {
+      const results = searchImages(bottomImages, bottomSearch.value);
+      renderResults(bottomResults, results, false);
+    });
+
+    rotateTopBtn.addEventListener("click", () => {
+      topRotation = (topRotation + 90) % 360;
+      topPreview.style.transform = `rotate(${topRotation}deg)`;
+    });
+
+    rotateBottomBtn.addEventListener("click", () => {
+      bottomRotation = (bottomRotation + 90) % 360;
+      bottomPreview.style.transform = `rotate(${bottomRotation}deg)`;
+    });
+  </script>
 </body>
 </html>

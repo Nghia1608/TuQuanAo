@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Image = require('../models/image');
+const Combo = require('../models/combo'); // 👈 thêm dòng này
 
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -22,16 +23,6 @@ const storage = new CloudinaryStorage({
   },
 });
 const upload = multer({ storage });
-
-// 🔁 Chuyển Google Drive link về dạng direct
-function convertDriveUrl(url) {
-  const match = url.match(/(?:\/d\/|id=)([a-zA-Z0-9_-]{10,})/);
-  if (match) {
-    const fileId = match[1];
-    return `https://drive.google.com/uc?export=view&id=${fileId}`;
-  }
-  return url;
-}
 
 // 🚪 Trang đăng nhập
 router.get('/login', (req, res) => {
@@ -56,17 +47,12 @@ router.get('/', async (req, res) => {
     const imagesWithEmbed = images.map(img => {
       let embedUrl = img.url;
 
-      if (typeof embedUrl === 'string') {
-        if (embedUrl.includes('drive.google.com')) {
-          embedUrl = convertDriveUrl(embedUrl);
-        }
-
-        const isImage = embedUrl.match(/^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/i)
-                      || embedUrl.includes('drive.google.com/uc?export=view');
-        if (!isImage) {
-          console.warn(`❌ Link ảnh lỗi | ${img.name} → ${img.url}`);
-          embedUrl = null;
-        }
+      const isImage = typeof embedUrl === 'string' &&
+                      (embedUrl.match(/^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/i) ||
+                       embedUrl.includes('res.cloudinary.com'));
+      if (!isImage) {
+        console.warn(`❌ Link ảnh lỗi | ${img.name} → ${img.url}`);
+        embedUrl = null;
       }
 
       return {
@@ -85,8 +71,8 @@ router.get('/', async (req, res) => {
 // 🧩 Trang ghép đồ
 router.get('/ghepdo', async (req, res) => {
   try {
-    const topImages = await Image.find({ type: 'top' });
-    const bottomImages = await Image.find({ type: 'bottom' });
+    const topImages = await Image.find({ type: { $in: ['áo','đầm'] } });
+    const bottomImages = await Image.find({ type: { $in: ['quần', 'váy'] } });
 
     res.render('ghepdo', { topImages, bottomImages });
   } catch (err) {
@@ -94,7 +80,24 @@ router.get('/ghepdo', async (req, res) => {
     res.status(500).send('Lỗi server');
   }
 });
+// 📥 Lưu combo ghép đồ
+router.post('/api/combo', async (req, res) => {
+  const { topId, bottomId } = req.body;
 
+  if (!topId || !bottomId) {
+    return res.status(400).json({ error: 'Thiếu topId hoặc bottomId' });
+  }
+
+  try {
+    const newCombo = new Combo({ topId, bottomId });
+    await newCombo.save();
+    console.log('✅ Combo mới đã lưu:', newCombo);
+    res.json({ success: true, combo: newCombo });
+  } catch (err) {
+    console.error('❌ Lỗi khi lưu combo:', err);
+    res.status(500).json({ error: 'Lỗi khi lưu combo' });
+  }
+});
 // ➕ Trang thêm ảnh
 router.get('/add-image', (req, res) => {
   res.render('add-image');
