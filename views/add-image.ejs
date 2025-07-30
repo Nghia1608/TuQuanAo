@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thêm ảnh mới</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #f0f0f0;
+      padding: 30px;
+      border-radius: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h2>📥 Thêm ảnh mới</h2>
+  <form action="/add-image" method="POST" enctype="multipart/form-data">
+    <label>Tên ảnh:</label>
+    <input name="name" required />
+
+    <label>Chọn ảnh từ máy:</label>
+    <input type="file" name="image" accept="image/*" required />
+
+    <label>Loại:</label>
+    <select name="type" required>
+      <option value="">--Chọn loại--</option>
+      <option value="áo">Áo</option>
+      <option value="quần">Quần</option>
+      <option value="váy">Váy</option>
+    <option value="đầm">Đầm</option>
+    </select>
+
+    <label>Màu sắc:</label>
+    <input name="color" required />
+
+    <button type="submit">🚀 Upload & Thêm ảnh</button>
+  </form>
+
+  <a href="/">← Quay về trang chủ</a>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>👕 Ghép Đồ</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>👚 Ghép đồ thần sầu nè!</h1>
+
+    <form method="GET" action="/ghepdo">
+      <input type="text" name="q" placeholder="🔍 Tìm món đồ..." value="<%= typeof query !== 'undefined' ? query : '' %>" />
+      <button type="submit">Tìm</button>
+    </form>
+
+    <form method="POST" action="/ghepdo">
+      <div class="ghep-frame">
+        <div class="half-frame">
+          <h3>Khung trên</h3>
+          <select name="topId" required>
+            <% images.forEach(img => { %>
+              <option value="<%= img._id %>"><%= img.name %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="half-frame">
+          <h3>Khung dưới</h3>
+          <select name="bottomId" required>
+            <% images.forEach(img => { %>
+              <option value="<%= img._id %>"><%= img.name %></option>
+            <% }); %>
+          </select>
+        </div>
+      </div>
+      <button type="submit">✅ Ghép liền!</button>
+    </form>
+
+    <% if (combo) { %>
+      <h2>Kết quả combo:</h2>
+      <div class="ghep-frame">
+        <img src="<%= combo.top.url %>" alt="Áo" style="max-height: 200px;">
+        <img src="<%= combo.bottom.url %>" alt="Quần" style="max-height: 200px;">
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
